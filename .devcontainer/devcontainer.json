@@ -1,0 +1,19 @@
+
+{
+  "name": "Digital Library Development",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss"
+      ]
+    }
+  },
+  "forwardPorts": [1420],
+  "postCreateCommand": "pnpm install",
+  "remoteUser": "node"
+}
