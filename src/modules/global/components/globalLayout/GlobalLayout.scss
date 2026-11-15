@@ -3,4 +3,23 @@
     height: 100vh;
     margin: 0;
     padding: 0;
+    overflow: hidden;
+    display: flex;
+
+    &__side-menu {
+        width: 3.5rem;
+        height: 100vh;
+        background: #EEE8D4;
+    }
+
+    &__inner {
+        width: calc(100% - 3.5rem);
+        height: 100vh;
+    }
+
+    &__bookshelf {
+        height: 100vh;
+        overflow-y: auto;
+        background: #FDF8EC;
+    }
 }

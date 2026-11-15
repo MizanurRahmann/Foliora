@@ -1,5 +1,34 @@
+:root {
+    --font-family: "Figtree", sans-serif;
+    --primary-color: #FDF8EC;
+    --secondary-color: ##EEE8D4;
+    --violet-color: #8966BD
+    --button-color-primary: #393A34;
+}
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-family);
+    font-optical-sizing: auto;
+    font-weight: 400;
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+}
+
+button.btn_primary {
+    background-color: var(--button-color-primary);
+    color: #FFFFFF;
+    border: none;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
 }

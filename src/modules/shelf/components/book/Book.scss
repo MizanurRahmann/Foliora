@@ -1,9 +1,63 @@
+
 .book {
-    width: 2.5rem;
-    height: 8rem;
-    position: fixed;
-    top: 0;
-    left: 0;
-    background: #ccc;
-    cursor: grab;
+  width: 3.5rem;
+  height: 13rem;
+  padding: 1rem 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.3rem;
+
+  overflow: hidden;
+  background: var(--primary);
+  color: var(--secondary);
+  border-radius: 2px;
+
+  cursor: grab;
+  user-select: none;
+
+  &--bottom-band {
+    border-bottom: 1rem solid var(--secondary);
+  }
+
+  &--center-label {
+    padding: 1rem 0.5rem;
+
+    .book__title {
+      padding: 0.5rem;
+      background: var(--secondary);
+      color: var(--primary);
+    }
+  }
+
+  &--double-stripe {
+    border-top: 0.5rem solid var(--secondary);
+    border-bottom: 0.5rem solid var(--secondary);
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &--dragging {
+    opacity: 0.4;
+  }
+
+  %vertical-text {
+    writing-mode: vertical-rl;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__title {
+    @extend %vertical-text;
+
+    flex: 1;
+    font-size: 0.6rem;
+    font-family: var(--font-family);
+    font-weight: 700;
+  }
 }

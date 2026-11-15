@@ -1,0 +1,23 @@
+name: foliora
+
+services:
+  dev:
+    profiles: ["dev"]
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: dev
+    ports:
+      - "1420:1420"
+    volumes:
+      - ..:/app
+      - /app/node_modules
+
+  prod:
+    profiles: ["prod"]
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: prod
+    ports:
+      - "8080:80"
