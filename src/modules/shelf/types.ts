@@ -28,3 +28,8 @@ export interface BookData {
   storageMode?: StorageMode;
   file?: { name: string; size: string };
 }
+
+export interface ShelfData {
+  shelfId: number;
+  books: BookData[];
+}
