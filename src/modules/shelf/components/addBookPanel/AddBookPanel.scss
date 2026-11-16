@@ -69,6 +69,9 @@
     gap: 0.5rem;
     padding: 2.5rem 1rem;
     min-height: 10rem;
+    width: 100%;
+    font: inherit;
+    color: inherit;
     border: 2px dashed #bbb;
     background: #EEE8D4;
     text-align: center;
@@ -254,6 +257,21 @@
   &__error {
     font-size: 0.85rem;
     color: #c1121f;
+  }
+
+  &__hint {
+    margin-top: -0.5rem;
+    font-size: 0.85rem;
+    color: #777;
+  }
+
+  &__warning {
+    margin-top: 1rem;
+    padding: 0.8rem 1rem;
+    border-left: 3px solid #b26a00;
+    background: #fff4e0;
+    font-size: 0.9rem;
+    color: #5c3d00;
   }
 }
 

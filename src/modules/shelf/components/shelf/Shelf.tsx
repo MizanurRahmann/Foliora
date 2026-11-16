@@ -2,17 +2,19 @@ import type { CSSProperties } from "react";
 
 import "./Shelf.scss";
 
-import type { ShelfData } from "../../types";
-import Book from "../book/Book";
+import type { BookSummary, ShelfData } from "../../types";
+import Book, { type MenuAnchor } from "../book/Book";
 import ShelfSpace from "../shelfSpace/ShelfSpace";
 
 interface ShelfProps {
   shelf: ShelfData;
+  highlightedBookId?: number | null;
+  onOpenBookMenu?: (book: BookSummary, anchor: MenuAnchor) => void;
 }
 
 type ShelfStyles = CSSProperties & { "--capacity": number };
 
-function Shelf({ shelf }: ShelfProps) {
+function Shelf({ shelf, highlightedBookId = null, onOpenBookMenu }: ShelfProps) {
   const positions = Array.from({ length: shelf.capacity }, (_, index) => index + 1);
   const styles: ShelfStyles = { "--capacity": shelf.capacity };
 
@@ -31,7 +33,11 @@ function Shelf({ shelf }: ShelfProps) {
               className="shelf__item"
               style={{ gridColumn: `${item.start} / span ${item.span}` }}
             >
-              <Book book={item.book} />
+              <Book
+                book={item.book}
+                isNew={item.book.id === highlightedBookId}
+                onOpenMenu={onOpenBookMenu}
+              />
             </div>
           ),
       )}

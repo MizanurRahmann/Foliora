@@ -1,19 +1,22 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { toAppError, type AppError } from "../../../api/error";
+import { addBook, refreshFileStatus, relinkBook, removeBook, updateBook } from "../../../api/books";
 import {
-    createShelf,
-    deleteShelf,
-    listShelves,
-    reorderShelves,
-    updateShelf,
+  createShelf,
+  deleteShelf,
+  listShelves,
+  reorderShelves,
+  updateShelf,
 } from "../../../api/shelves";
-import type { ShelfData } from "../types";
+import type { AddBookRequest, BookFields, ShelfData } from "../types";
 
 type Status = "loading" | "ready" | "error";
 
 // Write actions resolve to the error, or null on success, so forms can show it next to the control.
 export type ActionResult = Promise<AppError | null>;
+
+export type AddBookOutcome = { error: AppError } | { error: null; bookId: number; shelves: ShelfData[] };
 
 export function useShelves() {
   const [shelves, setShelves] = useState<ShelfData[]>([]);
@@ -36,12 +39,33 @@ export function useShelves() {
     void reload();
   }, [reload]);
 
+  // A linked PDF may have been moved or restored while the app was in the background.
+  useEffect(() => {
+    const refresh = () => {
+      refreshFileStatus()
+        .then(setShelves)
+        .catch(() => undefined);
+    };
+    window.addEventListener("focus", refresh);
+    return () => window.removeEventListener("focus", refresh);
+  }, []);
+
   const run = useCallback(async (action: () => Promise<ShelfData[]>): ActionResult => {
     try {
       setShelves(await action());
       return null;
     } catch (err) {
       return toAppError(err);
+    }
+  }, []);
+
+  const add = useCallback(async (request: AddBookRequest): Promise<AddBookOutcome> => {
+    try {
+      const result = await addBook(request);
+      setShelves(result.shelves);
+      return { error: null, bookId: result.bookId, shelves: result.shelves };
+    } catch (err) {
+      return { error: toAppError(err) };
     }
   }, []);
 
@@ -55,5 +79,10 @@ export function useShelves() {
       run(() => updateShelf(id, name, capacity)),
     reorder: (ids: number[]) => run(() => reorderShelves(ids)),
     remove: (id: number) => run(() => deleteShelf(id)),
+    addBook: add,
+    editBook: (id: number, fields: BookFields) => run(() => updateBook(id, fields)),
+    deleteBook: (id: number, deleteFile: boolean) => run(() => removeBook(id, deleteFile)),
+    relinkBook: (id: number, path: string, acceptChanged: boolean) =>
+      run(() => relinkBook(id, path, acceptChanged)),
   };
 }

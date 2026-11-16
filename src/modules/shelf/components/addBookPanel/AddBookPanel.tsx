@@ -1,51 +1,37 @@
-import { useState, type ChangeEvent, type CSSProperties } from "react";
+import { useState } from "react";
 import { PiBookOpenDuotone, PiFilePdfDuotone } from "react-icons/pi";
+
+import { pickPdf } from "../../../../api/dialog";
+import { inspectPdf } from "../../../../api/books";
+import { toAppError, type AppError } from "../../../../api/error";
 import SidePanel from "../../../global/components/sidePanel/SidePanel";
-import type { CoverStyle, NewBookPayload, StorageMode } from "../../types";
-import { readPdfMetadata } from "../../utils/readPdfMetadata";
+import type { AddBookRequest, PdfInspection, StorageMode } from "../../types";
+import { formToFields, isFormValid, newBookForm, type BookForm } from "../../utils/bookForm";
+import { formatBytes } from "../../utils/format";
 import "./AddBookPanel.scss";
-import ColorField from "./ColorField";
+import BookFormFields from "./BookFormFields";
 
 interface AddBookPanelProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddBook: (payload: NewBookPayload) => void;
-}
-
-interface BookForm {
-  title: string;
-  author: string;
-  pages: string;
-  size: string;
-  primaryColor: string;
-  secondaryColor: string;
-  coverStyle: CoverStyle;
+  onAddBook: (request: AddBookRequest) => Promise<AppError | null>;
 }
 
 type Step = "upload" | "details" | "storage";
 
-const PAGE_SIZES = ["B5", "A5"];
-const DEFAULT_SIZE = "B5";
-
-const COVER_STYLES: { value: CoverStyle; id: string; blocks: number }[] = [
-  { value: "bottom-band", id: "style-1", blocks: 1 },
-  { value: "center-label", id: "style-2", blocks: 1 },
-  { value: "double-stripe", id: "style-3", blocks: 2 },
-];
-
-const DEFAULT_COLORS = {
-  primaryColor: "#1d3557",
-  secondaryColor: "#f1faee"
-};
+interface Chosen {
+  path: string;
+  info: PdfInspection;
+}
 
 const STORAGE_OPTIONS: { mode: StorageMode; title: string; description: string }[] = [
   {
-    mode: "copy",
+    mode: "COPY",
     title: "Copy the book to your shelf.",
     description: "By copying, the book will be copied and managed from a separate folder.",
   },
   {
-    mode: "link",
+    mode: "LINK",
     title: "Link the book to your shelf.",
     description:
       "By linking, no copy of the book is kept in the shelf space. It just shows the book from your original location.",
@@ -54,19 +40,21 @@ const STORAGE_OPTIONS: { mode: StorageMode; title: string; description: string }
 
 function AddBookPanel({ isOpen, onClose, onAddBook }: AddBookPanelProps) {
   const [step, setStep] = useState<Step>("upload");
+  const [chosen, setChosen] = useState<Chosen | null>(null);
   const [form, setForm] = useState<BookForm | null>(null);
-  const [fileInfo, setFileInfo] = useState<{ name: string; size: string } | null>(null);
   const [storageMode, setStorageMode] = useState<StorageMode | null>(null);
   const [isReading, setIsReading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const reset = () => {
     setStep("upload");
+    setChosen(null);
     setForm(null);
-    setFileInfo(null);
     setStorageMode(null);
     setError(null);
     setIsReading(false);
+    setIsSaving(false);
   };
 
   const handleClose = () => {
@@ -74,50 +62,40 @@ function AddBookPanel({ isOpen, onClose, onAddBook }: AddBookPanelProps) {
     onClose();
   };
 
-  const handleFile = async (file: File) => {
+  const handleChoose = async () => {
     setError(null);
-    setIsReading(true);
     try {
-      const meta = await readPdfMetadata(file);
-      setForm({
-        title: meta.title,
-        author: meta.author,
-        pages: String(meta.pages),
-        size: DEFAULT_SIZE,
-        coverStyle: COVER_STYLES[0].value,
-        ...DEFAULT_COLORS
-      });
-      setFileInfo({ name: file.name, size: meta.size });
-    } catch {
-      setError("Could not read this PDF. Please choose another file.");
+      const path = await pickPdf();
+      if (!path) return;
+      setIsReading(true);
+      const info = await inspectPdf(path);
+      setChosen({ path, info });
+      setForm(newBookForm(info));
+    } catch (err) {
+      setError(toAppError(err).message);
     } finally {
       setIsReading(false);
     }
   };
 
-  const updateForm = (field: keyof BookForm, value: string) =>
-    setForm((current) => (current ? { ...current, [field]: value } : current));
-
-  const handleSubmit = () => {
-    if (!form || !fileInfo || !storageMode) return;
-
-    onAddBook({
-      title: form.title.trim(),
-      author: form.author.trim(),
-      pages: Number(form.pages) || 0,
-      size: form.size,
-      primaryColor: form.primaryColor,
-      secondaryColor: form.secondaryColor,
-      coverStyle: form.coverStyle,
+  const handleSubmit = async () => {
+    if (!form || !chosen || !storageMode) return;
+    setIsSaving(true);
+    setError(null);
+    const failure = await onAddBook({
+      sourcePath: chosen.path,
       storageMode,
-      file: fileInfo,
+      ...formToFields(form),
     });
-    handleClose();
+    setIsSaving(false);
+    if (failure) setError(failure.message);
+    else handleClose();
   };
 
-  const setField =
-    (field: keyof BookForm) => (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
-      updateForm(field, e.target.value);
+  const goTo = (next: Step) => {
+    setError(null);
+    setStep(next);
+  };
 
   const footer =
     step === "upload" ? (
@@ -125,81 +103,82 @@ function AddBookPanel({ isOpen, onClose, onAddBook }: AddBookPanelProps) {
         type="button"
         className="add-book__button add-book__button--primary"
         disabled={!form}
-        onClick={() => setStep("details")}
+        onClick={() => goTo("details")}
       >
         Go to Next
       </button>
     ) : step === "details" ? (
       <>
-        <button
-          type="button"
-          className="add-book__button add-book__button--w30"
-          onClick={() => setStep("upload")}
-        >
+        <button type="button" className="add-book__button add-book__button--w30" onClick={() => goTo("upload")}>
           Back
         </button>
         <button
           type="button"
           className="add-book__button add-book__button--primary add-book__button--w70"
-          onClick={() => setStep("storage")}
+          disabled={!form || !isFormValid(form)}
+          onClick={() => goTo("storage")}
         >
           Next
         </button>
       </>
     ) : (
       <>
-        <button
-          type="button"
-          className="add-book__button add-book__button--w30"
-          onClick={() => setStep("details")}
-        >
+        <button type="button" className="add-book__button add-book__button--w30" onClick={() => goTo("details")}>
           Back
         </button>
         <button
           type="button"
           className="add-book__button add-book__button--primary add-book__button--w70"
-          disabled={!storageMode}
-          onClick={handleSubmit}
+          disabled={!storageMode || isSaving}
+          onClick={() => void handleSubmit()}
         >
-          Add Book
+          {isSaving ? "Adding..." : "Add Book"}
         </button>
       </>
     );
 
   return (
     <SidePanel isOpen={isOpen} title="Add New Book" onClose={handleClose} footer={footer}>
-      {step === "upload" ? (
+      {step === "upload" && (
         <>
-          <label className="add-book__dropzone">
+          <button type="button" className="add-book__dropzone" onClick={() => void handleChoose()} disabled={isReading}>
             <PiBookOpenDuotone />
-            <input
-              type="file"
-              accept="application/pdf,.pdf"
-              className="add-book__input"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                e.target.value = "";
-                if (file) void handleFile(file);
-              }}
-            />
             <span className="add-book__dropzone-title">Add Book to Shelf</span>
             <span className="add-book__dropzone-hint">
-              {isReading ? "Reading metadata..." : "Select a PDF from your device to add to the shelf"}
+              {isReading ? "Reading the PDF..." : "Select a PDF from your device to add to the shelf"}
             </span>
-            {error && <span className="add-book__error">{error}</span>}
-          </label>
+          </button>
 
-          {fileInfo && (
+          {chosen && (
             <div className="add-book__file">
               <PiFilePdfDuotone className="add-book__file-icon" />
               <div className="add-book__file-meta">
-                <span className="add-book__file-name">{fileInfo.name}</span>
-                <span className="add-book__file-size">{fileInfo.size}</span>
+                <span className="add-book__file-name">{chosen.info.fileName}</span>
+                <span className="add-book__file-size">
+                  {formatBytes(chosen.info.sizeBytes)} · {chosen.info.pageCount} pages
+                </span>
               </div>
             </div>
           )}
+
+          {chosen?.info.duplicateOf && (
+            <p className="add-book__warning" role="status">
+              A book with the same content, &ldquo;{chosen.info.duplicateOf.title}&rdquo;, is already on your
+              shelves. You can still add it again, or close this panel to cancel.
+            </p>
+          )}
         </>
-      ) : step === "storage" ? (
+      )}
+
+      {step === "details" && form && chosen && (
+        <BookFormFields
+          form={form}
+          pageCount={chosen.info.pageCount}
+          onChange={(patch) => setForm({ ...form, ...patch })}
+        />
+      )}
+
+      {step === "storage" && (
         <div className="add-book__options" role="radiogroup">
           {STORAGE_OPTIONS.map((option) => {
             const selected = storageMode === option.mode;
@@ -224,93 +203,12 @@ function AddBookPanel({ isOpen, onClose, onAddBook }: AddBookPanelProps) {
             );
           })}
         </div>
-      ) : form && (
-        <form className="add-book__form" onSubmit={(e) => e.preventDefault()}>
-          <label className="add-book__field">
-            Book name
-            <input type="text" value={form.title} onChange={setField("title")} />
-          </label>
-          <label className="add-book__field">
-            Author
-            <input type="text" value={form.author} onChange={setField("author")} />
-          </label>
-          <div className="add-book__row">
-            <label className="add-book__field">
-              Pages
-              <input type="number" min={1} value={form.pages} onChange={setField("pages")} />
-            </label>
-            <label className="add-book__field">
-              Size
-              <select value={form.size} onChange={setField("size")}>
-                {PAGE_SIZES.map((size) => (
-                  <option key={size} value={size}>
-                    {size}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
+      )}
 
-          <h3>Book Cover Colors</h3>
-          <div className="add-book__row-wrapper">
-            <div className="add-book__row">
-              <ColorField
-                label="Primary color"
-                value={form.primaryColor}
-                onChange={(hex) => updateForm("primaryColor", hex)}
-              />
-              <ColorField
-                label="Secondary color"
-                value={form.secondaryColor}
-                onChange={(hex) => updateForm("secondaryColor", hex)}
-              />
-            </div>
-          </div>
-
-          <h3>Book Cover Styles</h3>
-          <div className="add-book__row-wrapper">
-
-            <div
-              className="styles"
-              role="radiogroup"
-              aria-label="Book cover style"
-              style={
-                {
-                  "--primary": form.primaryColor,
-                  "--secondary": form.secondaryColor,
-                } as CSSProperties
-              }
-            >
-              {COVER_STYLES.map((style) => {
-                const selected = form.coverStyle === style.value;
-                return (
-                  <div
-                    key={style.value}
-                    id={style.id}
-                    role="radio"
-                    tabIndex={0}
-                    aria-checked={selected}
-                    className={`style${selected ? " style--selected" : ""}`}
-                    onClick={() => updateForm("coverStyle", style.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        updateForm("coverStyle", style.value);
-                      }
-                    }}
-                  >
-                    {Array.from({ length: style.blocks }, (_, i) => (
-                      <div key={i} className="block"></div>
-                    ))}
-                  </div>
-                );
-              })}
-            </div>
-
-
-          </div>
-
-        </form>
+      {error && (
+        <p className="add-book__error" role="alert">
+          {error}
+        </p>
       )}
     </SidePanel>
   );

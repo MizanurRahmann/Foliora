@@ -8,9 +8,10 @@ export type View = "home" | "shelves";
 interface MenuProps {
   view: View;
   onNavigate: (view: View) => void;
+  onAddBook: () => void;
 }
 
-function SideMenu({ view, onNavigate }: MenuProps) {
+function SideMenu({ view, onNavigate, onAddBook }: MenuProps) {
   const itemClass = (target: View) => `menu-item${view === target ? " menu-item--active" : ""}`;
 
   return (
@@ -38,13 +39,12 @@ function SideMenu({ view, onNavigate }: MenuProps) {
         >
           <TbCategory />
         </button>
-        {/* Enabled in Phase 4, when books can be saved. */}
         <button
           type="button"
           className="menu-item"
           aria-label="Add New Book"
-          data-tooltip="Add New Book (coming soon)"
-          disabled
+          data-tooltip="Add New Book"
+          onClick={onAddBook}
         >
           <BsJournalPlus />
         </button>

@@ -1,0 +1,36 @@
+.book-menu {
+  position: fixed;
+  z-index: 60;
+  min-width: 11rem;
+  padding: 0.25rem 0;
+  list-style: none;
+  background: #fff;
+  border: 1px solid #ccc;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+
+  &__backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 59;
+  }
+
+  &__item {
+    display: block;
+    width: 100%;
+    padding: 0.55rem 1rem;
+    border: none;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      background: #EEE8D4;
+      outline: none;
+    }
+
+    &--danger {
+      color: #b3261e;
+    }
+  }
+}

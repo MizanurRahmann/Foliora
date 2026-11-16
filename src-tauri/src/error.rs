@@ -30,6 +30,16 @@ pub enum AppError {
     Validation(String),
     #[error("{0} was not found")]
     NotFound(&'static str),
+    #[error("{0}")]
+    InvalidPdf(String),
+    #[error("There is no free space on any shelf for this book")]
+    NoSpace,
+    #[error("The book would not fit where it stands. Free up the space next to it or move it first")]
+    NoSpaceAtPosition,
+    #[error("The book's PDF file could not be found")]
+    FileMissing,
+    #[error("This file is different from the one that was originally added")]
+    FileChanged,
     #[error("The database change violates a data rule: {0}")]
     Constraint(String),
     #[error("Database error: {0}")]
@@ -59,6 +69,11 @@ impl AppError {
             AppError::ShelfNotEmpty { .. } => "SHELF_NOT_EMPTY",
             AppError::Validation(_) => "VALIDATION",
             AppError::NotFound(_) => "NOT_FOUND",
+            AppError::InvalidPdf(_) => "INVALID_PDF",
+            AppError::NoSpace => "NO_SPACE",
+            AppError::NoSpaceAtPosition => "NO_SPACE_AT_POSITION",
+            AppError::FileMissing => "FILE_MISSING",
+            AppError::FileChanged => "FILE_CHANGED",
             AppError::Constraint(_) => "CONSTRAINT",
             AppError::Database(_) => "DATABASE",
             AppError::Io(_) => "IO",

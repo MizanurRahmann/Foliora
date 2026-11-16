@@ -2,6 +2,7 @@ use rusqlite::{Connection, params};
 use serde::Serialize;
 
 use crate::error::{AppError, AppResult, BlockingItem};
+use crate::placement::{Placed, ShelfLayout};
 
 pub const MIN_CAPACITY: i64 = 1;
 pub const MAX_CAPACITY: i64 = 60;
@@ -20,6 +21,10 @@ pub struct BookSummary {
     pub primary_color: String,
     pub secondary_color: String,
     pub file_status: String,
+    pub storage_mode: String,
+    pub file_size_bytes: i64,
+    pub original_file_name: String,
+    pub created_at: String,
 }
 
 /// A placement on a shelf. Exactly one of `book` and `decoration_id` is set.
@@ -48,7 +53,8 @@ pub fn list(conn: &Connection) -> AppResult<Vec<Shelf>> {
         "SELECT s.id, s.name, s.capacity, s.sort_order,
                 si.id, si.start_slot, si.span_slots, si.decoration_id,
                 b.id, b.title, b.author, b.page_count, b.book_size, b.orientation,
-                b.cover_style, b.primary_color, b.secondary_color, b.file_status
+                b.cover_style, b.primary_color, b.secondary_color, b.file_status,
+                b.storage_mode, b.file_size_bytes, b.original_file_name, b.created_at
          FROM shelves s
          LEFT JOIN shelf_items si ON si.shelf_id = s.id
          LEFT JOIN books b ON b.id = si.book_id
@@ -84,6 +90,10 @@ pub fn list(conn: &Connection) -> AppResult<Vec<Shelf>> {
                 primary_color: row.get(15)?,
                 secondary_color: row.get(16)?,
                 file_status: row.get(17)?,
+                storage_mode: row.get(18)?,
+                file_size_bytes: row.get(19)?,
+                original_file_name: row.get(20)?,
+                created_at: row.get(21)?,
             }),
             None => None,
         };
@@ -99,6 +109,22 @@ pub fn list(conn: &Connection) -> AppResult<Vec<Shelf>> {
         }
     }
     Ok(shelves)
+}
+
+/// Occupancy of every shelf in display order, as the placement rules expect it.
+pub fn layouts(conn: &Connection) -> AppResult<Vec<ShelfLayout>> {
+    Ok(list(conn)?
+        .into_iter()
+        .map(|shelf| ShelfLayout {
+            id: shelf.id,
+            capacity: shelf.capacity,
+            items: shelf
+                .items
+                .iter()
+                .map(|item| Placed { id: item.id, start: item.start, span: item.span })
+                .collect(),
+        })
+        .collect())
 }
 
 fn validate(name: &str, capacity: i64) -> AppResult<String> {

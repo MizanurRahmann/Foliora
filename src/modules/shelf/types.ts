@@ -1,18 +1,7 @@
-export type CoverStyle = "bottom-band" | "center-label" | "double-stripe";
-export type StorageMode = "copy" | "link";
+import type { BookSize, Orientation } from "./placement";
 
-// JSON produced by the Add Book form; this is what the backend will receive.
-export interface NewBookPayload {
-  title: string;
-  author: string;
-  pages: number;
-  size: string;
-  primaryColor: string;
-  secondaryColor: string;
-  coverStyle: CoverStyle;
-  storageMode: StorageMode;
-  file: { name: string; size: string };
-}
+export type CoverStyle = "BOTTOM_BAND" | "CENTER_LABEL" | "DOUBLE_STRIPE";
+export type StorageMode = "COPY" | "LINK";
 
 // Mirrors src-tauri/src/shelves.rs.
 export interface BookSummary {
@@ -20,12 +9,16 @@ export interface BookSummary {
   title: string;
   author: string | null;
   pageCount: number;
-  bookSize: "A5" | "B5";
-  orientation: "VERTICAL" | "HORIZONTAL";
-  coverStyle: "BOTTOM_BAND" | "CENTER_LABEL" | "DOUBLE_STRIPE";
+  bookSize: BookSize;
+  orientation: Orientation;
+  coverStyle: CoverStyle;
   primaryColor: string;
   secondaryColor: string;
   fileStatus: "AVAILABLE" | "MISSING";
+  storageMode: StorageMode;
+  fileSizeBytes: number;
+  originalFileName: string;
+  createdAt: string;
 }
 
 // Exactly one of `book` and `decorationId` is set.
@@ -43,4 +36,30 @@ export interface ShelfData {
   capacity: number;
   sortOrder: number;
   items: ShelfItem[];
+}
+
+// What the user can edit about a book (src-tauri/src/books.rs).
+export interface BookFields {
+  title: string;
+  author: string | null;
+  bookSize: BookSize;
+  orientation: Orientation;
+  coverStyle: CoverStyle;
+  primaryColor: string;
+  secondaryColor: string;
+}
+
+export interface AddBookRequest extends BookFields {
+  sourcePath: string;
+  storageMode: StorageMode;
+}
+
+export interface PdfInspection {
+  title: string | null;
+  author: string | null;
+  pageCount: number;
+  sizeBytes: number;
+  hash: string;
+  fileName: string;
+  duplicateOf: { id: number; title: string } | null;
 }

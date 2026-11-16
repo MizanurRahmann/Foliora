@@ -20,6 +20,40 @@ pub enum Orientation {
 /// Vertical books over this many pages need two slots.
 const THICK_BOOK_PAGES: u32 = 800;
 
+impl BookSize {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            BookSize::A5 => "A5",
+            BookSize::B5 => "B5",
+        }
+    }
+
+    pub fn parse(value: &str) -> Option<Self> {
+        match value {
+            "A5" => Some(BookSize::A5),
+            "B5" => Some(BookSize::B5),
+            _ => None,
+        }
+    }
+}
+
+impl Orientation {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Orientation::Vertical => "VERTICAL",
+            Orientation::Horizontal => "HORIZONTAL",
+        }
+    }
+
+    pub fn parse(value: &str) -> Option<Self> {
+        match value {
+            "VERTICAL" => Some(Orientation::Vertical),
+            "HORIZONTAL" => Some(Orientation::Horizontal),
+            _ => None,
+        }
+    }
+}
+
 pub fn book_span(size: BookSize, orientation: Orientation, pages: u32) -> i64 {
     match (orientation, size) {
         (Orientation::Vertical, _) if pages > THICK_BOOK_PAGES => 2,
