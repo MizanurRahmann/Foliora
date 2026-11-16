@@ -1,5 +1,5 @@
 node_modules
 dist
 .git
-src-tauri
-docker
+release
+src-tauri/target

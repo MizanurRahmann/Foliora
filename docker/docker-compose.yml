@@ -1,23 +1,73 @@
+# Linux host: run `xhost +local:docker` once per login so the container can open a window.
+#
+#   docker compose up                    Tauri app in watch mode (Vite HMR + Rust rebuild on change)
+#   docker compose --profile web up web  Frontend only, in a browser at http://localhost:1420
+#   docker compose run --rm bundle       Build the .deb into ./release
 name: foliora
 
+x-tauri: &tauri
+  build:
+    context: ..
+    dockerfile: docker/Dockerfile
+    target: tauri
+
 services:
-  dev:
-    profiles: ["dev"]
+  app:
+    <<: *tauri
+    environment:
+      DISPLAY: ${DISPLAY:-:0}
+    volumes:
+      - ..:/app
+      - node_modules:/app/node_modules
+      - cargo-registry:/home/node/.cargo/registry
+      - cargo-git:/home/node/.cargo/git
+      - rust-target:/home/node/target
+      - pnpm-store:/home/node/.pnpm-store
+      - app-data:/home/node/.local/share/com.mizanur.foliora
+      - /tmp/.X11-unix:/tmp/.X11-unix
+    # For GPU rendering, uncomment (needed for the 3D book animations to run smoothly):
+    # devices:
+    #   - /dev/dri:/dev/dri
+
+  web:
+    profiles: ["web"]
     build:
       context: ..
       dockerfile: docker/Dockerfile
-      target: dev
+      target: web
     ports:
       - "1420:1420"
     volumes:
       - ..:/app
-      - /app/node_modules
+      - web_node_modules:/app/node_modules
+      - web-pnpm-store:/pnpm-store
 
-  prod:
-    profiles: ["prod"]
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile
-      target: prod
-    ports:
-      - "8080:80"
+  bundle:
+    <<: *tauri
+    profiles: ["bundle"]
+    volumes:
+      - ..:/app
+      - node_modules:/app/node_modules
+      - cargo-registry:/home/node/.cargo/registry
+      - cargo-git:/home/node/.cargo/git
+      - rust-target:/home/node/target
+      - pnpm-store:/home/node/.pnpm-store
+      - ../release:/release
+    # AppImage is skipped: it needs FUSE, which containers don't have.
+    command:
+      - sh
+      - -c
+      - >
+        pnpm install --frozen-lockfile --store-dir /home/node/.pnpm-store
+        && pnpm tauri build --bundles deb
+        && cp -r /home/node/target/release/bundle/deb/. /release/
+
+volumes:
+  node_modules:
+  web_node_modules:
+  web-pnpm-store:
+  cargo-registry:
+  cargo-git:
+  rust-target:
+  pnpm-store:
+  app-data:

@@ -1,26 +1,34 @@
-# Floiora — Product Specification
+# Foliora — Product Specification
 
 ## 1. Product Overview
 
-Floiora is a digital bookshelf application that allows users to organize, manage, and read their PDF books through an interactive bookshelf interface.
+Foliora is a digital bookshelf application that allows users to organize, manage, and read their PDF books through an interactive bookshelf interface.
 
 The primary goal is to recreate the experience of managing a physical bookshelf in a digital environment. Users can arrange books, add decorative objects, customize their shelves, and open books to read them.
 
-Unlike a traditional PDF library, Floiora focuses on visual organization and an enjoyable, realistic bookshelf experience.
+Unlike a traditional PDF library, Foliora focuses on visual organization and an enjoyable, realistic bookshelf experience.
 
 ## 2. Bookshelf Management
 
-A bookshelf is the primary workspace of Floiora. Users can create multiple shelves and organize their books and decorative objects across them.
+A bookshelf is the primary workspace of Foliora. Users can create multiple shelves and organize their books and decorative objects across them.
 
 ### 2.1. Shelf Features
 
 - View all available shelves.
 - Add new shelves.
-- Edit existing shelves.
+- Edit existing shelves (name, capacity, display order).
 - Delete shelves.
 - Configure the capacity of each shelf.
 - View all books and decorative objects belonging to a shelf.
 - Organize items within and across shelves.
+
+Rules:
+
+- A new installation starts with 4 shelves of 24 spaces each.
+- Shelf capacity must be between 1 and 60 spaces.
+- Capacity cannot be reduced below the last occupied space. The user is told which items block the change.
+- Only an empty shelf can be deleted. If it still contains items, the user must move or remove them first.
+- When there are no shelves, the Home view shows an empty state with a shortcut to create one.
 
 ### 2.2. Shelf Layout
 
@@ -30,12 +38,28 @@ A bookshelf is the primary workspace of Floiora. Users can create multiple shelv
 - Items can be arranged vertically or horizontally, depending on their type and orientation.
 - Items must remain within the available shelf area.
 - Occupied spaces cannot be shared by multiple items.
+- Items are placed in a single row. Stacking items on top of each other (for example, a vase on a lying book) is not supported in v1.
 
 The bookshelf should visually resemble a real bookshelf, with books and decorative objects arranged naturally.
 
+### 2.3. Space (Span) Rules
+
+The number of spaces a book occupies is derived from its size, orientation, and page count. Users never enter it directly.
+
+| Orientation | Book Size | Page Count | Spaces |
+|---|---|---|---|
+| Vertical | A5 or B5 | ≤ 800 | 1 |
+| Vertical | A5 or B5 | > 800 | 2 |
+| Horizontal | A5 | any | 4 |
+| Horizontal | B5 | any | 5 |
+
+A decorative element's span is defined by its catalog entry.
+
+These values are defined in one place in the code and may be tuned during UI development. Changing any input (size, orientation, page count) recalculates the span and must be validated against the shelf like a move.
+
 ## 3. Book Management
 
-Books are the primary elements of Floiora. Each book represents a PDF document and appears as a visually customizable book on the bookshelf.
+Books are the primary elements of Foliora. Each book represents a PDF document and appears as a visually customizable book on the bookshelf.
 
 ### 3.1. Book Appearance
 
@@ -46,7 +70,8 @@ Users can configure:
 - Book title.
 - Author name.
 - Book size (B5 or A5).
-- Book cover style.
+- Book cover style: `Bottom band`, `Center label`, or `Double stripe`.
+- Primary and secondary cover colors.
 - Book orientation:
   - Vertical (standing).
   - Horizontal (lying down).
@@ -58,14 +83,17 @@ Users can add books through the Add Book option in the application sidebar.
 The process includes:
 
 1. Select a PDF file from the device.
-2. Validate the selected file.
-3. Display available book information.
-4. Enter or update the book details.
-5. Select the book size.
-6. Choose a book cover style.
-7. Select the book orientation.
-8. Choose a file storage option.
-9. Add the book to an available shelf position.
+2. Validate the selected file (readable, a real PDF, not password-protected).
+3. Check for duplicates. If the same file (by content hash) already exists, warn the user and let them cancel or continue.
+4. Display available book information.
+5. Enter or update the book details.
+6. Select the book size.
+7. Choose a book cover style and colors.
+8. Select the book orientation.
+9. Choose a file storage option.
+10. Add the book to an available shelf position.
+
+The add operation is all-or-nothing. If no shelf position is available or any step fails, no book record is created and any copied file is removed.
 
 ### 3.3. Book Information
 
@@ -80,10 +108,11 @@ The book information form includes:
 | File Size | Size of the PDF document |
 | Book Size | B5 (default) or A5 |
 | Cover Style | Visual appearance of the book |
+| Cover Colors | Primary and secondary color |
 | Orientation | Vertical or horizontal |
 | Storage Option | Copy or link the PDF |
 
-Book name, author, and page count should be populated from available PDF metadata whenever possible. Users can update the information before adding the book.
+Book name, author, and page count should be populated from available PDF metadata whenever possible. If the metadata is missing, the title defaults to the file name. Users can update the information before adding the book. Page count is read from the PDF and is not user-editable.
 
 ### 3.4. PDF Storage Options
 
@@ -91,21 +120,25 @@ Users can choose between two storage options:
 
 **Copy PDF**
 
-- Copy the selected PDF into a designated Floiora folder.
-- Keep the book accessible through Floiora independently of the original file location.
+- Copy the selected PDF into Foliora's managed folder inside the application data directory.
+- Files are stored under a generated name, so name collisions cannot occur.
+- Keep the book accessible through Foliora independently of the original file location.
 
 **Link PDF**
 
 - Keep the PDF in its original location.
 - Link the book to the existing PDF without creating another copy.
-- If the original file becomes unavailable, notify the user.
+- Linked files are checked when the application starts and when the book is opened.
+- If the file is unavailable, the book is shown with a "missing" indicator. The user can:
+  - **Relink** by selecting the file's new location. If its content differs from the original, the user is warned before confirming.
+  - Remove the book.
 
 ### 3.5. Book Placement
 
-- After adding a book, Floiora automatically places it in an available position.
+- After adding a book, Foliora automatically places it in the first available position that fits its span, searching shelves in display order.
 - The book must fit within the available shelf capacity.
 - The newly added book should be highlighted through a tooltip or small modal for five seconds.
-- If no suitable position is available, inform the user.
+- If no suitable position is available, inform the user before the book is created, so nothing is saved.
 
 ### 3.6. Open and Read a Book
 
@@ -120,6 +153,13 @@ When a user left-clicks a book:
 
 The reading experience should feel like opening and closing a physical book.
 
+Reader requirements:
+
+- Page navigation (next, previous, go to page) and zoom.
+- Pages are rendered lazily, so large PDFs open quickly.
+- The last-read page is saved and restored the next time the book is opened.
+- If the file is missing or cannot be read, the book does not open. The user sees the relink or remove options instead.
+
 ### 3.7. Move a Book
 
 Users can rearrange books using drag-and-drop interactions.
@@ -128,12 +168,21 @@ Rules:
 
 - A book can be moved to another position on the same shelf.
 - A book can be moved to another shelf.
-- A book can exchange positions with another book when dropped onto an occupied book position, provided the positions are compatible.
+- A book can exchange positions with another book when dropped onto that book.
 - A book cannot be placed where a decorative element occupies the required space.
 - A book cannot be placed if the destination does not have sufficient capacity.
-- Invalid movements should be rejected.
+- Invalid movements should be rejected, leaving the arrangement unchanged.
 
-Book positions can only be changed through drag and drop.
+**Exchange rule:**
+
+- **Different shelves:** each book takes the other's start space.
+- **Same shelf:** the two books swap order within the block they span. The right-hand book moves to the left-hand book's start, and the left-hand book moves so it ends where the right-hand book ended.
+- The exchange is valid only if both books then fit within their shelves without overlapping any other item.
+- Books with equal spans can always exchange.
+
+A move or exchange is applied completely or not at all.
+
+Drag and drop is the primary way to change positions. For keyboard accessibility, the context menu also offers **Move to…**, which uses the same rules. The edit form cannot change position.
 
 ### 3.8. Edit a Book
 
@@ -152,11 +201,12 @@ Users can update:
 - Book name.
 - Author.
 - Book size.
-- Cover style.
+- Cover style and colors.
 - Orientation.
-- Associated PDF, if supported.
 
-The book's shelf position cannot be changed through the edit form.
+Replacing the associated PDF is not supported in v1, except through the relink flow for missing linked files.
+
+The book's shelf position cannot be changed through the edit form. If a change to size or orientation alters the book's span and it no longer fits at its current position, the edit is rejected and the user is told to move the book first.
 
 ### 3.9. Remove a Book
 
@@ -164,7 +214,7 @@ Users can remove a book from their bookshelf.
 
 Removing a book should release its occupied shelf spaces.
 
-If the PDF was copied into Floiora's managed folder, the user should be given the option to remove the stored file as well.
+If the PDF was copied into Foliora's managed folder, the user should be given the option to remove the stored file as well.
 
 If the PDF was linked, removing the book should not delete the original file.
 
@@ -222,15 +272,16 @@ Books and decorative elements share the same shelf space.
 The following rules apply to all shelf items:
 
 1. Every item must have a position on a shelf.
-2. Every item must occupy a defined amount of shelf space.
+2. Every item must occupy a defined amount of shelf space (see 2.3).
 3. Multiple items cannot occupy the same space.
 4. Items cannot extend beyond the shelf boundaries.
-5. Items can only be moved through drag and drop.
+5. Items are moved through drag and drop, or through **Move to…** for keyboard users.
 6. The destination must have sufficient capacity for the item.
-7. A book can exchange positions with another compatible book.
+7. A book can exchange positions with another book if both fit after the exchange (see 3.7).
 8. Decorative elements cannot exchange positions with other items.
 9. Books cannot be placed over decorative elements.
 10. Decorative elements cannot be placed over books or other decorative elements.
+11. Every move, exchange, or span change is atomic and is validated both in the UI (for drag feedback) and in the backend (authoritative).
 
 ## 6. Application Navigation
 
@@ -241,12 +292,19 @@ The application will provide a sidebar for accessing its main features.
 | Home | View and interact with the main bookshelf |
 | Manage Shelves | Add, edit, delete, and manage shelves |
 | Add Book | Import a new PDF book |
-| Manage Elements | There will be some preadded elements user can just use them and place the on the shelf of not use them |
+| Manage Elements | Browse the built-in decorative element library and place an element on a shelf. Elements are optional. |
 | Settings | Manage application preferences |
+
+Settings include:
+
+- Theme.
+- Default book size, orientation, and storage option.
+- Location of the managed PDF folder (read-only in v1).
+- Backup and restore (export the database and copied PDFs to an archive, then import it back).
 
 ## 7. User Interaction and Experience
 
-Floiora should provide an interactive and visually engaging experience.
+Foliora should provide an interactive and visually engaging experience.
 
 The following interaction guidelines apply:
 
@@ -260,10 +318,12 @@ The following interaction guidelines apply:
 - Newly added books should receive temporary visual highlighting.
 - Context menus should provide convenient access to book actions.
 - Shelf arrangements should remain consistent when users navigate between application sections.
+- All shelf actions are reachable from the keyboard.
+- The shelf stays responsive with at least 200 books. 3D effects are applied only to the book being opened, not to every book on the shelf.
 
 ## 8. Product Scope Summary
 
-Floiora consists of three primary product areas:
+Foliora consists of three primary product areas:
 
 ### Bookshelf
 - Multiple shelves.
@@ -292,3 +352,12 @@ Floiora consists of three primary product areas:
 - Element removal.
 
 The overall experience should make managing a digital bookshelf feel as natural and enjoyable as organizing a physical bookshelf.
+
+## 9. Out of Scope for v1
+
+- Stacking items on top of other items.
+- Replacing a book's PDF (other than relinking a missing file).
+- Unplaced books (every book lives on a shelf).
+- Formats other than PDF.
+- Annotations, highlights, and bookmarks.
+- Cloud sync.

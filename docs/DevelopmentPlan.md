@@ -1,7 +1,7 @@
-# Floiora — High-Level Development Plan
+# Foliora — High-Level Development Plan
 
 ## 1. Development Goal
-Build Floiora as a cross-platform desktop application that can be installed and used locally.
+Build Foliora as a cross-platform desktop application that can be installed and used locally.
 
 The application will use React and TypeScript for its interface, Tauri 2 and Rust for desktop functionality, and SQLite for persistent local data.
 
@@ -114,4 +114,4 @@ A few principles to follow throughout development:
 - Maintain a clear distinction between unfinished and completed features.
 Suggested next step: Start with Phase 1 and establish a working, installable Tauri application before developing the bookshelf.
 
-I can also help track Floiora's development progress and prepare the next milestone's tasks as you complete each phase.
+I can also help track Foliora's development progress and prepare the next milestone's tasks as you complete each phase.
