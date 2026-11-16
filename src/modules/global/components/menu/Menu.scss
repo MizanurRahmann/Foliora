@@ -30,6 +30,20 @@
             background-color: #e0dfdf;
         }
 
+        &--active {
+            background-color: #e0dfdf;
+            box-shadow: inset 3px 0 0 #8966BD;
+        }
+
+        &:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+
+            &:hover {
+                background: none;
+            }
+        }
+
         &[data-tooltip]::after {
             content: attr(data-tooltip);
             position: absolute;

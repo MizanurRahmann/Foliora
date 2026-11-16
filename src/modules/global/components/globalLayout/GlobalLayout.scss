@@ -22,4 +22,13 @@
         overflow-y: auto;
         background: #FDF8EC;
     }
+
+    &__message {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        padding: 4rem 1rem;
+        color: #5c3d2e;
+    }
 }

@@ -1,16 +1,15 @@
+mod commands;
 mod db;
 mod error;
+#[allow(dead_code)] // Used by the book commands from Phase 4 on.
+mod placement;
+mod shelves;
 
 use std::sync::Mutex;
-use tauri::{Manager, State};
-use crate::db::{Db, Health};
-use crate::error::{AppError, AppResult};
 
-#[tauri::command]
-fn health_check(db: State<Db>) -> AppResult<Health> {
-    let conn = db.0.lock().map_err(|_| AppError::Database("database lock poisoned".into()))?;
-    db::health(&conn)
-}
+use tauri::Manager;
+
+use crate::db::Db;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -23,7 +22,14 @@ pub fn run() {
             app.manage(Db(Mutex::new(conn)));
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![health_check])
+        .invoke_handler(tauri::generate_handler![
+            commands::health_check,
+            commands::list_shelves,
+            commands::create_shelf,
+            commands::update_shelf,
+            commands::reorder_shelves,
+            commands::delete_shelf,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

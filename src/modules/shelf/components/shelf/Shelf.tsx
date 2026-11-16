@@ -1,36 +1,40 @@
+import type { CSSProperties } from "react";
+
 import "./Shelf.scss";
 
-import { SLOTS_PER_SHELF } from "../../constants";
-import type { BookData } from "../../types";
+import type { ShelfData } from "../../types";
+import Book from "../book/Book";
 import ShelfSpace from "../shelfSpace/ShelfSpace";
 
 interface ShelfProps {
-  shelfNumber: number;
-  books: BookData[];
-  onMoveBook: (bookId: string, shelfNumber: number, position: number) => void;
+  shelf: ShelfData;
 }
 
-function Shelf({ shelfNumber, books, onMoveBook }: ShelfProps) {
-  const booksByPosition = new Map(
-    books.map((book) => [book.position, book]),
-  );
+type ShelfStyles = CSSProperties & { "--capacity": number };
 
-  const positions = Array.from(
-    { length: SLOTS_PER_SHELF },
-    (_, index) => index + 1,
-  );
+function Shelf({ shelf }: ShelfProps) {
+  const positions = Array.from({ length: shelf.capacity }, (_, index) => index + 1);
+  const styles: ShelfStyles = { "--capacity": shelf.capacity };
 
   return (
-    <div className="shelf">
+    <div className="shelf" style={styles} role="group" aria-label={shelf.name}>
       {positions.map((position) => (
-        <ShelfSpace
-          key={position}
-          shelfNumber={shelfNumber}
-          position={position}
-          book={booksByPosition.get(position)}
-          onMoveBook={onMoveBook}
-        />
+        <ShelfSpace key={position} position={position} />
       ))}
+
+      {/* Decorations are drawn once the decoration library exists. */}
+      {shelf.items.map(
+        (item) =>
+          item.book && (
+            <div
+              key={item.id}
+              className="shelf__item"
+              style={{ gridColumn: `${item.start} / span ${item.span}` }}
+            >
+              <Book book={item.book} />
+            </div>
+          ),
+      )}
     </div>
   );
 }

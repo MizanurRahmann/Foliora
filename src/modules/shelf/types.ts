@@ -14,22 +14,33 @@ export interface NewBookPayload {
   file: { name: string; size: string };
 }
 
-export interface BookData {
-  id: string;
+// Mirrors src-tauri/src/shelves.rs.
+export interface BookSummary {
+  id: number;
+  title: string;
+  author: string | null;
+  pageCount: number;
+  bookSize: "A5" | "B5";
+  orientation: "VERTICAL" | "HORIZONTAL";
+  coverStyle: "BOTTOM_BAND" | "CENTER_LABEL" | "DOUBLE_STRIPE";
   primaryColor: string;
   secondaryColor: string;
-  title: string;
-  author: string;
-  shelfNumber: number;
-  position: number;
-  size: string;
-  pages: number;
-  coverStyle?: CoverStyle;
-  storageMode?: StorageMode;
-  file?: { name: string; size: string };
+  fileStatus: "AVAILABLE" | "MISSING";
+}
+
+// Exactly one of `book` and `decorationId` is set.
+export interface ShelfItem {
+  id: number;
+  start: number;
+  span: number;
+  book: BookSummary | null;
+  decorationId: number | null;
 }
 
 export interface ShelfData {
-  shelfId: number;
-  books: BookData[];
+  id: number;
+  name: string;
+  capacity: number;
+  sortOrder: number;
+  items: ShelfItem[];
 }

@@ -94,4 +94,4 @@ pub fn health(conn: &Connection) -> AppResult<Health> {
 }
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;

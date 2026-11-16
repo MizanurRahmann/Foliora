@@ -2,10 +2,10 @@
 import { useState, type CSSProperties, type DragEvent } from "react";
 import "./Book.scss";
 
-import type { BookData } from "../../types";
+import type { BookSummary } from "../../types";
 
 interface BookProps {
-  book: BookData;
+  book: BookSummary;
 }
 
 type BookStyles = CSSProperties & {
@@ -23,12 +23,12 @@ function Book({ book }: BookProps) {
 
   const className = [
     "book",
-    `book--${book.coverStyle ?? "bottom-band"}`,
+    `book--${book.coverStyle.toLowerCase().replace(/_/g, "-")}`,
     isDragging && "book--dragging"
   ].filter(Boolean).join(" ");
 
   const handleDragStart = (event: DragEvent<HTMLDivElement>) => {
-    event.dataTransfer.setData("text/plain", book.id);
+    event.dataTransfer.setData("text/plain", String(book.id));
     event.dataTransfer.effectAllowed = "move";
 
     setIsDragging(true);
@@ -43,7 +43,7 @@ function Book({ book }: BookProps) {
       className={className}
       style={bookStyles}
       draggable
-      title={`${book.title} — ${book.author}`}
+      title={book.author ? `${book.title} — ${book.author}` : book.title}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >

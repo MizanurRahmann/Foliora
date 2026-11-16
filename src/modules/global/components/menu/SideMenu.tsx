@@ -1,14 +1,18 @@
 import "./Menu.scss";
 
 import { BsJournalPlus } from "react-icons/bs";
-import { TbCategoryPlus } from "react-icons/tb";
+import { TbCategory, TbHome } from "react-icons/tb";
+
+export type View = "home" | "shelves";
 
 interface MenuProps {
-  onAddShelf: () => void;
-  onAddBook: () => void;
+  view: View;
+  onNavigate: (view: View) => void;
 }
 
-function SideMenu({ onAddShelf, onAddBook }: MenuProps) {
+function SideMenu({ view, onNavigate }: MenuProps) {
+  const itemClass = (target: View) => `menu-item${view === target ? " menu-item--active" : ""}`;
+
   return (
     <>
       <div className="brand"></div>
@@ -16,23 +20,34 @@ function SideMenu({ onAddShelf, onAddBook }: MenuProps) {
       <div className="menu-items">
         <button
           type="button"
-          className="menu-item"
-          aria-label="Add New Shelf"
-          data-tooltip="Add New Shelf"
-          onClick={onAddShelf}
+          className={itemClass("home")}
+          aria-label="Home"
+          aria-current={view === "home" ? "page" : undefined}
+          data-tooltip="Home"
+          onClick={() => onNavigate("home")}
         >
-          <TbCategoryPlus />
+          <TbHome />
         </button>
+        <button
+          type="button"
+          className={itemClass("shelves")}
+          aria-label="Manage Shelves"
+          aria-current={view === "shelves" ? "page" : undefined}
+          data-tooltip="Manage Shelves"
+          onClick={() => onNavigate("shelves")}
+        >
+          <TbCategory />
+        </button>
+        {/* Enabled in Phase 4, when books can be saved. */}
         <button
           type="button"
           className="menu-item"
           aria-label="Add New Book"
-          data-tooltip="Add New Book"
-          onClick={onAddBook}
+          data-tooltip="Add New Book (coming soon)"
+          disabled
         >
           <BsJournalPlus />
         </button>
-        <div className="menu-item">C</div>
       </div>
     </>
   );

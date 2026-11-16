@@ -7,7 +7,7 @@ fn db() -> Connection {
     open_in_memory().unwrap()
 }
 
-fn add_book(conn: &Connection, title: &str) -> i64 {
+pub(crate) fn add_book(conn: &Connection, title: &str) -> i64 {
     conn.execute(
         "INSERT INTO books (title, page_count, file_size_bytes, file_path, original_file_name,
                             file_hash, storage_mode, primary_color, secondary_color)
@@ -18,7 +18,7 @@ fn add_book(conn: &Connection, title: &str) -> i64 {
     conn.last_insert_rowid()
 }
 
-fn place(conn: &Connection, shelf: i64, book: i64, start: i64, span: i64) -> AppResult<()> {
+pub(crate) fn place(conn: &Connection, shelf: i64, book: i64, start: i64, span: i64) -> AppResult<()> {
     conn.execute(
         "INSERT INTO shelf_items (shelf_id, book_id, start_slot, span_slots) VALUES (?1, ?2, ?3, ?4)",
         params![shelf, book, start, span],
@@ -199,7 +199,7 @@ fn shelf_capacity_cannot_shrink_below_occupied_space() {
         .execute("UPDATE shelves SET capacity = 10 WHERE id = 1", [])
         .map_err(AppError::from)
         .unwrap_err();
-    assert!(matches!(err, AppError::CapacityTooSmall));
+    assert!(matches!(err, AppError::CapacityTooSmall { .. }));
 
     conn.execute("UPDATE shelves SET capacity = 15 WHERE id = 1", []).unwrap();
 }

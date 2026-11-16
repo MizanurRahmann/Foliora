@@ -1,14 +1,5 @@
 .shelf-space {
-    flex: 0 0 3.5rem;
-    width: 3.5rem;
+    grid-row: 1;
     height: 15rem;
-    display: flex;
-    align-items: flex-end;
-    transition: background 0.1s;
     // border: 1px dashed #ccc;
-
-    &--over {
-        background: rgba(0, 0, 0, 0.08);
-        border-color: #888;
-    }
 }

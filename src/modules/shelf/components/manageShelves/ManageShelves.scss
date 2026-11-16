@@ -1,0 +1,112 @@
+.manage-shelves {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+
+  h1 {
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+  }
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.85rem;
+    color: #5c3d2e;
+  }
+
+  input {
+    padding: 0.5rem 0.6rem;
+    border: 1px solid #ccc;
+    background: #fff;
+  }
+
+  input[type="number"] {
+    width: 5rem;
+  }
+
+  button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  &__new,
+  &__fields {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.75rem;
+  }
+
+  &__new {
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background: #EEE8D4;
+
+    label:first-child {
+      flex: 1;
+      min-width: 12rem;
+    }
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    list-style: none;
+  }
+
+  &__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 1rem;
+    border: 1px solid #EEE8D4;
+    background: #fff;
+
+    .manage-shelves__fields label:first-child {
+      width: 14rem;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+
+    button {
+      display: flex;
+      align-items: center;
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      background: #fff;
+      cursor: pointer;
+    }
+  }
+
+  &__count {
+    margin-right: 0.5rem;
+    font-size: 0.85rem;
+    color: #777;
+  }
+
+  &__empty {
+    color: #777;
+  }
+
+  &__error {
+    flex-basis: 100%;
+    padding: 0.6rem 0.8rem;
+    border-left: 3px solid #b3261e;
+    background: #fdecea;
+    color: #7a1612;
+    font-size: 0.9rem;
+
+    ul {
+      margin: 0.4rem 0 0 1.2rem;
+    }
+  }
+}

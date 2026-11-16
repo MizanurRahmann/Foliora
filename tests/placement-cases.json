@@ -1,0 +1,134 @@
+{
+  "bookSpan": [
+    { "name": "vertical B5, thin", "size": "B5", "orientation": "VERTICAL", "pages": 1, "expect": 1 },
+    { "name": "vertical B5, typical", "size": "B5", "orientation": "VERTICAL", "pages": 300, "expect": 1 },
+    { "name": "vertical A5, at the 800-page limit", "size": "A5", "orientation": "VERTICAL", "pages": 800, "expect": 1 },
+    { "name": "vertical B5, just over the limit", "size": "B5", "orientation": "VERTICAL", "pages": 801, "expect": 2 },
+    { "name": "vertical A5, very thick", "size": "A5", "orientation": "VERTICAL", "pages": 1500, "expect": 2 },
+    { "name": "horizontal A5", "size": "A5", "orientation": "HORIZONTAL", "pages": 10, "expect": 4 },
+    { "name": "horizontal B5", "size": "B5", "orientation": "HORIZONTAL", "pages": 10, "expect": 5 },
+    { "name": "horizontal B5 ignores page count", "size": "B5", "orientation": "HORIZONTAL", "pages": 2000, "expect": 5 }
+  ],
+
+  "canPlace": [
+    { "name": "empty shelf, first slot", "capacity": 10, "items": [], "span": 1, "start": 1, "expect": true },
+    { "name": "empty shelf, fills it exactly", "capacity": 10, "items": [], "span": 10, "start": 1, "expect": true },
+    { "name": "empty shelf, last slot", "capacity": 10, "items": [], "span": 1, "start": 10, "expect": true },
+    { "name": "overflows the end", "capacity": 10, "items": [], "span": 2, "start": 10, "expect": false },
+    { "name": "start below 1", "capacity": 10, "items": [], "span": 1, "start": 0, "expect": false },
+    { "name": "start beyond capacity", "capacity": 10, "items": [], "span": 1, "start": 11, "expect": false },
+    { "name": "zero span", "capacity": 10, "items": [], "span": 0, "start": 1, "expect": false },
+    { "name": "adjacent on the left", "capacity": 10, "items": [{ "id": 1, "start": 3, "span": 2 }], "span": 2, "start": 1, "expect": true },
+    { "name": "adjacent on the right", "capacity": 10, "items": [{ "id": 1, "start": 3, "span": 2 }], "span": 2, "start": 5, "expect": true },
+    { "name": "overlaps the left edge", "capacity": 10, "items": [{ "id": 1, "start": 3, "span": 2 }], "span": 2, "start": 2, "expect": false },
+    { "name": "overlaps the right edge", "capacity": 10, "items": [{ "id": 1, "start": 3, "span": 2 }], "span": 2, "start": 4, "expect": false },
+    { "name": "same start", "capacity": 10, "items": [{ "id": 1, "start": 3, "span": 2 }], "span": 1, "start": 3, "expect": false },
+    { "name": "covers the whole item", "capacity": 10, "items": [{ "id": 1, "start": 3, "span": 2 }], "span": 4, "start": 2, "expect": false },
+    { "name": "inside the item", "capacity": 10, "items": [{ "id": 1, "start": 3, "span": 2 }], "span": 1, "start": 4, "expect": false },
+    { "name": "ignoring the item itself, same place", "capacity": 10, "items": [{ "id": 1, "start": 3, "span": 2 }], "ignore": [1], "span": 2, "start": 3, "expect": true },
+    { "name": "ignoring the item itself, shifted", "capacity": 10, "items": [{ "id": 1, "start": 3, "span": 2 }], "ignore": [1], "span": 3, "start": 2, "expect": true },
+    { "name": "ignoring one item does not ignore another", "capacity": 10, "items": [{ "id": 1, "start": 3, "span": 2 }, { "id": 2, "start": 6, "span": 1 }], "ignore": [1], "span": 3, "start": 4, "expect": false },
+    { "name": "one-slot gap fits one", "capacity": 10, "items": [{ "id": 1, "start": 1, "span": 2 }, { "id": 2, "start": 4, "span": 2 }], "span": 1, "start": 3, "expect": true },
+    { "name": "one-slot gap does not fit two", "capacity": 10, "items": [{ "id": 1, "start": 1, "span": 2 }, { "id": 2, "start": 4, "span": 2 }], "span": 2, "start": 3, "expect": false }
+  ],
+
+  "firstFit": [
+    { "name": "empty first shelf", "shelves": [{ "id": 1, "capacity": 5, "items": [] }], "span": 2, "expect": { "shelfId": 1, "start": 1 } },
+    { "name": "after an item at the start", "shelves": [{ "id": 1, "capacity": 5, "items": [{ "id": 1, "start": 1, "span": 2 }] }], "span": 2, "expect": { "shelfId": 1, "start": 3 } },
+    { "name": "full shelf is skipped", "shelves": [{ "id": 1, "capacity": 4, "items": [{ "id": 1, "start": 1, "span": 4 }] }, { "id": 2, "capacity": 4, "items": [] }], "span": 1, "expect": { "shelfId": 2, "start": 1 } },
+    { "name": "uses a gap in the middle", "shelves": [{ "id": 1, "capacity": 6, "items": [{ "id": 1, "start": 1, "span": 2 }, { "id": 2, "start": 5, "span": 2 }] }], "span": 2, "expect": { "shelfId": 1, "start": 3 } },
+    { "name": "skips gaps that are too small", "shelves": [{ "id": 1, "capacity": 6, "items": [{ "id": 1, "start": 1, "span": 1 }, { "id": 2, "start": 3, "span": 1 }] }], "span": 2, "expect": { "shelfId": 1, "start": 4 } },
+    { "name": "earlier shelf wins when it has room", "shelves": [{ "id": 1, "capacity": 5, "items": [{ "id": 1, "start": 1, "span": 4 }] }, { "id": 2, "capacity": 5, "items": [] }], "span": 1, "expect": { "shelfId": 1, "start": 5 } },
+    { "name": "list order, not id order, decides", "shelves": [{ "id": 9, "capacity": 5, "items": [] }, { "id": 2, "capacity": 5, "items": [] }], "span": 1, "expect": { "shelfId": 9, "start": 1 } },
+    { "name": "no shelf is large enough", "shelves": [{ "id": 1, "capacity": 3, "items": [{ "id": 1, "start": 1, "span": 3 }] }, { "id": 2, "capacity": 2, "items": [] }], "span": 3, "expect": null },
+    { "name": "span larger than every shelf", "shelves": [{ "id": 1, "capacity": 4, "items": [] }], "span": 5, "expect": null },
+    { "name": "no shelves", "shelves": [], "span": 1, "expect": null }
+  ],
+
+  "swap": [
+    {
+      "name": "same shelf, equal spans, adjacent",
+      "shelves": [{ "id": 1, "capacity": 10, "items": [{ "id": 1, "start": 1, "span": 1 }, { "id": 2, "start": 2, "span": 1 }] }],
+      "a": 1, "b": 2,
+      "expect": { "a": { "shelfId": 1, "start": 2 }, "b": { "shelfId": 1, "start": 1 } }
+    },
+    {
+      "name": "same shelf, unequal spans, adjacent",
+      "shelves": [{ "id": 1, "capacity": 10, "items": [{ "id": 1, "start": 1, "span": 1 }, { "id": 2, "start": 2, "span": 4 }] }],
+      "a": 1, "b": 2,
+      "expect": { "a": { "shelfId": 1, "start": 5 }, "b": { "shelfId": 1, "start": 1 } }
+    },
+    {
+      "name": "same shelf, argument order does not matter",
+      "shelves": [{ "id": 1, "capacity": 10, "items": [{ "id": 1, "start": 1, "span": 1 }, { "id": 2, "start": 2, "span": 4 }] }],
+      "a": 2, "b": 1,
+      "expect": { "a": { "shelfId": 1, "start": 1 }, "b": { "shelfId": 1, "start": 5 } }
+    },
+    {
+      "name": "same shelf, gap between the books",
+      "shelves": [{ "id": 1, "capacity": 10, "items": [{ "id": 1, "start": 1, "span": 2 }, { "id": 2, "start": 6, "span": 1 }] }],
+      "a": 1, "b": 2,
+      "expect": { "a": { "shelfId": 1, "start": 5 }, "b": { "shelfId": 1, "start": 1 } }
+    },
+    {
+      "name": "same shelf, wider book would hit the item between them",
+      "shelves": [{ "id": 1, "capacity": 10, "items": [{ "id": 1, "start": 1, "span": 1 }, { "id": 3, "start": 2, "span": 1 }, { "id": 2, "start": 3, "span": 3 }] }],
+      "a": 1, "b": 2,
+      "expect": null
+    },
+    {
+      "name": "same shelf, equal spans leave the item between them alone",
+      "shelves": [{ "id": 1, "capacity": 10, "items": [{ "id": 1, "start": 1, "span": 1 }, { "id": 3, "start": 2, "span": 1 }, { "id": 2, "start": 3, "span": 1 }] }],
+      "a": 1, "b": 2,
+      "expect": { "a": { "shelfId": 1, "start": 3 }, "b": { "shelfId": 1, "start": 1 } }
+    },
+    {
+      "name": "different shelves, equal spans",
+      "shelves": [
+        { "id": 1, "capacity": 10, "items": [{ "id": 1, "start": 2, "span": 1 }] },
+        { "id": 2, "capacity": 10, "items": [{ "id": 2, "start": 5, "span": 1 }] }
+      ],
+      "a": 1, "b": 2,
+      "expect": { "a": { "shelfId": 2, "start": 5 }, "b": { "shelfId": 1, "start": 2 } }
+    },
+    {
+      "name": "different shelves, unequal spans that still fit",
+      "shelves": [
+        { "id": 1, "capacity": 10, "items": [{ "id": 1, "start": 1, "span": 1 }] },
+        { "id": 2, "capacity": 4, "items": [{ "id": 2, "start": 3, "span": 2 }] }
+      ],
+      "a": 1, "b": 2,
+      "expect": { "a": { "shelfId": 2, "start": 3 }, "b": { "shelfId": 1, "start": 1 } }
+    },
+    {
+      "name": "different shelves, wider book hits a neighbour",
+      "shelves": [
+        { "id": 1, "capacity": 10, "items": [{ "id": 1, "start": 1, "span": 3 }] },
+        { "id": 2, "capacity": 10, "items": [{ "id": 2, "start": 1, "span": 1 }, { "id": 3, "start": 2, "span": 1 }] }
+      ],
+      "a": 1, "b": 2,
+      "expect": null
+    },
+    {
+      "name": "different shelves, wider book runs past the end",
+      "shelves": [
+        { "id": 1, "capacity": 10, "items": [{ "id": 1, "start": 1, "span": 3 }] },
+        { "id": 2, "capacity": 5, "items": [{ "id": 2, "start": 5, "span": 1 }] }
+      ],
+      "a": 1, "b": 2,
+      "expect": null
+    },
+    {
+      "name": "a book cannot swap with itself",
+      "shelves": [{ "id": 1, "capacity": 10, "items": [{ "id": 1, "start": 1, "span": 1 }] }],
+      "a": 1, "b": 1,
+      "expect": null
+    },
+    {
+      "name": "unknown item",
+      "shelves": [{ "id": 1, "capacity": 10, "items": [{ "id": 1, "start": 1, "span": 1 }] }],
+      "a": 1, "b": 99,
+      "expect": null
+    }
+  ]
+}
