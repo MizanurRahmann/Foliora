@@ -1,5 +1,17 @@
 .shelf-space {
     grid-row: 1;
     height: 15rem;
-    // border: 1px dashed #ccc;
+
+    &--start {
+        background: rgba(137, 102, 189, 0.08);
+        box-shadow: inset 1px 0 0 rgba(137, 102, 189, 0.35);
+    }
+
+    &--hover-ok {
+        background: rgba(46, 125, 50, 0.22);
+    }
+
+    &--hover-bad {
+        background: rgba(179, 38, 30, 0.22);
+    }
 }

@@ -3,9 +3,11 @@ mod commands;
 mod db;
 mod error;
 mod files;
-#[allow(dead_code)] // Move and swap use the rest of it in Phase 5.
+mod items;
 mod placement;
+mod reader;
 mod shelves;
+mod window;
 #[cfg(test)]
 mod testutil;
 
@@ -32,6 +34,10 @@ pub fn run() {
 
             app.manage(Db(Mutex::new(conn)));
             app.manage(Storage(books_dir));
+
+            if let Some(main) = app.get_webview_window("main") {
+                window::fit_to_screen(&main)?;
+            }
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -47,6 +53,10 @@ pub fn run() {
             commands::remove_book,
             commands::relink_book,
             commands::refresh_file_status,
+            commands::move_item,
+            commands::swap_books,
+            commands::read_book_file,
+            commands::save_reading_progress,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

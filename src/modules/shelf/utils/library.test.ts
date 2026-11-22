@@ -16,6 +16,7 @@ const book = (id: number, overrides: Partial<BookSummary> = {}): BookSummary => 
   primaryColor: "#112233",
   secondaryColor: "#aabbcc",
   fileStatus: "AVAILABLE",
+  lastReadPage: 1,
   storageMode: "COPY",
   fileSizeBytes: 1000,
   originalFileName: "b.pdf",

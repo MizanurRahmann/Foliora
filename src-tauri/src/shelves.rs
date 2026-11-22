@@ -21,6 +21,7 @@ pub struct BookSummary {
     pub primary_color: String,
     pub secondary_color: String,
     pub file_status: String,
+    pub last_read_page: i64,
     pub storage_mode: String,
     pub file_size_bytes: i64,
     pub original_file_name: String,
@@ -54,7 +55,7 @@ pub fn list(conn: &Connection) -> AppResult<Vec<Shelf>> {
                 si.id, si.start_slot, si.span_slots, si.decoration_id,
                 b.id, b.title, b.author, b.page_count, b.book_size, b.orientation,
                 b.cover_style, b.primary_color, b.secondary_color, b.file_status,
-                b.storage_mode, b.file_size_bytes, b.original_file_name, b.created_at
+                b.storage_mode, b.file_size_bytes, b.original_file_name, b.created_at, b.last_read_page
          FROM shelves s
          LEFT JOIN shelf_items si ON si.shelf_id = s.id
          LEFT JOIN books b ON b.id = si.book_id
@@ -94,6 +95,7 @@ pub fn list(conn: &Connection) -> AppResult<Vec<Shelf>> {
                 file_size_bytes: row.get(19)?,
                 original_file_name: row.get(20)?,
                 created_at: row.get(21)?,
+                last_read_page: row.get(22)?,
             }),
             None => None,
         };

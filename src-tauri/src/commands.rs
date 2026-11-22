@@ -8,6 +8,7 @@ use crate::books::{self, AddBookRequest, BookFields, Duplicate};
 use crate::db::{self, Db, Health};
 use crate::error::{AppError, AppResult};
 use crate::files::{self, PdfInfo, Storage};
+use crate::{items, reader};
 use crate::shelves::{self, Shelf};
 
 fn with_conn<T>(db: &Db, f: impl FnOnce(&mut Connection) -> AppResult<T>) -> AppResult<T> {
@@ -167,4 +168,35 @@ pub fn refresh_file_status(db: State<Db>, storage: State<Storage>) -> AppResult<
         books::refresh_status(conn, &storage.0)?;
         shelves::list(conn)
     })
+}
+
+#[tauri::command]
+pub fn move_item(db: State<Db>, item_id: i64, shelf_id: i64, start_slot: i64) -> AppResult<Vec<Shelf>> {
+    with_conn(&db, |conn| {
+        items::move_item(conn, item_id, shelf_id, start_slot)?;
+        shelves::list(conn)
+    })
+}
+
+#[tauri::command]
+pub fn swap_books(db: State<Db>, item_a: i64, item_b: i64) -> AppResult<Vec<Shelf>> {
+    with_conn(&db, |conn| {
+        items::swap_books(conn, item_a, item_b)?;
+        shelves::list(conn)
+    })
+}
+
+/// The PDF is sent as raw bytes. The path is looked up here, so the webview never names a file to read.
+#[tauri::command]
+pub async fn read_book_file(app: AppHandle, book_id: i64) -> AppResult<tauri::ipc::Response> {
+    let bytes = blocking(&app, move |db, books_dir| {
+        with_conn(db, |conn| reader::read_book_file(conn, books_dir, book_id))
+    })
+    .await?;
+    Ok(tauri::ipc::Response::new(bytes))
+}
+
+#[tauri::command]
+pub fn save_reading_progress(db: State<Db>, book_id: i64, page: i64) -> AppResult<()> {
+    with_conn(&db, |conn| reader::save_progress(conn, book_id, page))
 }

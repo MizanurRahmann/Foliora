@@ -25,9 +25,7 @@ services:
       - pnpm-store:/home/node/.pnpm-store
       - app-data:/home/node/.local/share/com.mizanur.foliora
       - /tmp/.X11-unix:/tmp/.X11-unix
-    # For GPU rendering, uncomment (needed for the 3D book animations to run smoothly):
-    # devices:
-    #   - /dev/dri:/dev/dri
+      - ${HOME}:/home/node/host:ro
 
   web:
     profiles: ["web"]

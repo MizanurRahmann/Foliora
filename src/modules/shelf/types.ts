@@ -15,6 +15,7 @@ export interface BookSummary {
   primaryColor: string;
   secondaryColor: string;
   fileStatus: "AVAILABLE" | "MISSING";
+  lastReadPage: number;
   storageMode: StorageMode;
   fileSizeBytes: number;
   originalFileName: string;

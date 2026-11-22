@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { toAppError, type AppError } from "../../../api/error";
+import { moveItem, swapBooks } from "../../../api/items";
 import { addBook, refreshFileStatus, relinkBook, removeBook, updateBook } from "../../../api/books";
 import {
   createShelf,
@@ -69,16 +70,28 @@ export function useShelves() {
     }
   }, []);
 
+  // Quietly re-reads the shelves, for changes made outside these actions (reading progress, file status).
+  const refresh = useCallback(async () => {
+    try {
+      setShelves(await listShelves());
+    } catch {
+      // The list on screen stays as it was.
+    }
+  }, []);
+
   return {
     shelves,
     status,
     loadError,
     reload,
+    refresh,
     create: (name: string, capacity: number) => run(() => createShelf(name, capacity)),
     update: (id: number, name: string, capacity: number) =>
       run(() => updateShelf(id, name, capacity)),
     reorder: (ids: number[]) => run(() => reorderShelves(ids)),
     remove: (id: number) => run(() => deleteShelf(id)),
+    moveItem: (itemId: number, shelfId: number, start: number) => run(() => moveItem(itemId, shelfId, start)),
+    swapBooks: (itemA: number, itemB: number) => run(() => swapBooks(itemA, itemB)),
     addBook: add,
     editBook: (id: number, fields: BookFields) => run(() => updateBook(id, fields)),
     deleteBook: (id: number, deleteFile: boolean) => run(() => removeBook(id, deleteFile)),

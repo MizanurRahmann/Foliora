@@ -1,0 +1,128 @@
+// The scene is as wide as the open book; its centre is the middle of the window, which is also the
+// vanishing point. Every piece is a plain absolutely positioned box moved by a 2D matrix set from
+// script (see Book3D.tsx), so no CSS 3D property is used anywhere.
+.b3d {
+  position: relative;
+  isolation: isolate;
+  pointer-events: none;
+  --open: 0;
+
+  &__piece {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform-origin: 0 0;
+  }
+
+  &__back {
+    background: var(--primary);
+  }
+
+  &__spine {
+    background: var(--primary);
+    overflow: hidden;
+
+    .b3d__spine-art {
+      transform-origin: 0 0;
+
+      .book {
+        cursor: default;
+        pointer-events: none;
+      }
+    }
+  }
+
+  // Darkens a face by how far it is turned from the light (set while posing).
+  &__shade {
+    position: absolute;
+    inset: 0;
+    background: #000;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  // Covers the shelf look (title, bands) with the plain cover colour as the book is picked up.
+  &__spine-blank {
+    position: absolute;
+    inset: 0;
+    background: var(--primary);
+    opacity: 0;
+  }
+
+  // The edges of the pages: thin lines running along the sheets.
+  &__pages {
+    background-color: #efe6d0;
+
+    &--fore {
+      background-image: repeating-linear-gradient(90deg, #f7f1e1 0 2px, #cfc4a8 2px 3px),
+        linear-gradient(90deg, rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0));
+    }
+
+    &--top,
+    &--bottom {
+      background-image: repeating-linear-gradient(180deg, #f7f1e1 0 2px, #cfc4a8 2px 3px),
+        linear-gradient(180deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0));
+    }
+
+  }
+
+  // The front cover is plain: the book's own colour, without its title.
+  &__outside {
+    background: var(--primary);
+  }
+
+  // The inside of the cover is paper, a little darker the less it is open.
+  &__inside {
+    background: #efe6d2;
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: #000;
+      opacity: calc((1 - var(--open)) * 0.28);
+    }
+  }
+
+  // A page: paper with its content, and a shadow where it curves down into the spine.
+  &__leaf {
+    background: #fbf8f0;
+  }
+
+  // The binding between the two pages: an off-white band down the middle of the open book, half on
+  // each page, with a hairline at its outer edges so it reads against the paper.
+  &__binding {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: #ffffff;
+    pointer-events: none;
+
+    &--right {
+      left: 0;
+      box-shadow: inset -1px 0 0 rgba(90, 70, 40, 0.2);
+    }
+
+    &--left {
+      right: 0;
+      box-shadow: inset 1px 0 0 rgba(90, 70, 40, 0.2);
+    }
+  }
+}
+
+.leaf-page {
+  position: relative;
+  display: grid;
+  place-items: center;
+
+  &__canvas {
+    display: block;
+    opacity: 0;
+    transition: opacity 0.16s ease;
+
+    &--shown {
+      opacity: 1;
+    }
+  }
+}

@@ -1,0 +1,193 @@
+// The reader is a layer over the whole window. While the book is in flight it blocks the shelves
+// underneath, so nothing else can be clicked or dragged until the book is back.
+.reader {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+
+  &__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(24, 17, 12, 0.66);
+    opacity: 0;
+  }
+
+  // Sits under the book while it is off the shelf.
+  &__shadow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 2.2rem;
+    border-radius: 50%;
+    background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0) 70%);
+    filter: blur(8px);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  &__viewport {
+    position: absolute;
+    inset: 0;
+    // Only the finished, open book may be scrolled (when zoomed in); in flight it is clipped.
+    overflow: hidden;
+
+    &--scroll {
+      overflow: auto;
+    }
+  }
+
+  // At least as big as the window, and centred, so the open book's middle is the window's middle.
+  &__table {
+    display: grid;
+    place-items: center;
+  }
+
+  &__single {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    background: #2b211b;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.24s ease;
+
+    &--visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+
+  &__pages {
+    flex: 1;
+    overflow: auto;
+    padding: 4.5rem 1rem 1rem;
+    outline: none;
+  }
+
+  &__page {
+    position: relative;
+    margin: 0 auto 1rem;
+    background: #fff;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+    flex: none;
+
+    canvas {
+      display: block;
+    }
+  }
+
+  // Controls appear only once the book lies open, and go as soon as it starts to close.
+  &__controls {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+
+    &--on {
+      opacity: 1;
+
+      button,
+      .reader__goto,
+      .reader__zoom {
+        pointer-events: auto;
+      }
+    }
+
+    button {
+      display: grid;
+      place-items: center;
+      width: 2.6rem;
+      height: 2.6rem;
+      border: none;
+      background: #eee8d4;
+      color: #3b2a20;
+      font-size: 1.35rem;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+      &:hover:not(:disabled) {
+        background: #fff;
+      }
+
+      &:disabled {
+        opacity: 0.4;
+        cursor: default;
+      }
+
+      &:focus-visible {
+        outline: 2px solid #8966bd;
+        outline-offset: 2px;
+      }
+    }
+  }
+
+  &__corner {
+    position: absolute;
+    top: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    &--top-left {
+      left: 1rem;
+    }
+
+    &--top-right {
+      right: 1rem;
+    }
+  }
+
+  &__zoom {
+    min-width: 3.2rem;
+    padding: 0.5rem 0.4rem;
+    background: #eee8d4;
+    color: #3b2a20;
+    font-size: 0.85rem;
+    text-align: center;
+  }
+
+  &__goto {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    height: 2.6rem;
+    padding: 0 0.7rem;
+    background: #eee8d4;
+    color: #3b2a20;
+    font-size: 0.95rem;
+
+    input {
+      width: 3.2rem;
+      padding: 0.2rem;
+      border: none;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      text-align: right;
+      outline: none;
+    }
+  }
+
+  &__turn {
+    position: absolute;
+    bottom: 1.2rem;
+    width: 3.2rem !important;
+    height: 2.8rem !important;
+
+    &--prev {
+      left: 1.2rem;
+    }
+
+    &--next {
+      right: 1.2rem;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reader__single,
+  .reader__controls {
+    transition: none;
+  }
+}

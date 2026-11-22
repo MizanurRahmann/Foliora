@@ -28,6 +28,10 @@
     animation: book-new 1s ease-in-out 5;
   }
 
+  &--moved {
+    animation: book-moved 0.6s ease-out;
+  }
+
   &__missing {
     position: absolute;
     top: 0.3rem;
@@ -100,7 +104,21 @@
   }
 }
 
+@keyframes book-moved {
+  from {
+    transform: translateY(-0.6rem);
+  }
+
+  to {
+    transform: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .book--moved {
+    animation: none;
+  }
+
   .book--new {
     animation: none;
     outline: 3px solid rgba(137, 102, 189, 0.9);

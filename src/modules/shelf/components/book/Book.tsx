@@ -1,4 +1,4 @@
-import { useState, type CSSProperties, type DragEvent, type KeyboardEvent, type MouseEvent } from "react";
+import type { CSSProperties, DragEvent, KeyboardEvent, MouseEvent } from "react";
 import "./Book.scss";
 
 import type { BookSummary } from "../../types";
@@ -10,8 +10,15 @@ export interface MenuAnchor {
 
 interface BookProps {
   book: BookSummary;
+  itemId: number;
+  span: number;
   isNew?: boolean;
+  isMoved?: boolean;
+  isDragging?: boolean;
   onOpenMenu?: (book: BookSummary, anchor: MenuAnchor) => void;
+  onOpen?: (book: BookSummary, element: HTMLElement) => void;
+  onDragStart?: (info: { itemId: number; span: number }) => void;
+  onDragEnd?: () => void;
 }
 
 type BookStyles = CSSProperties & {
@@ -19,9 +26,18 @@ type BookStyles = CSSProperties & {
   "--secondary": string;
 };
 
-function Book({ book, isNew = false, onOpenMenu }: BookProps) {
-  const [isDragging, setIsDragging] = useState(false);
-
+function Book({
+  book,
+  itemId,
+  span,
+  isNew = false,
+  isMoved = false,
+  isDragging = false,
+  onOpenMenu,
+  onOpen,
+  onDragStart,
+  onDragEnd,
+}: BookProps) {
   const bookStyles: BookStyles = {
     "--primary": book.primaryColor,
     "--secondary": book.secondaryColor,
@@ -33,6 +49,7 @@ function Book({ book, isNew = false, onOpenMenu }: BookProps) {
     `book--${book.coverStyle.toLowerCase().replace(/_/g, "-")}`,
     isDragging && "book--dragging",
     isNew && "book--new",
+    isMoved && "book--moved",
   ]
     .filter(Boolean)
     .join(" ");
@@ -45,11 +62,8 @@ function Book({ book, isNew = false, onOpenMenu }: BookProps) {
     event.dataTransfer.setData("text/plain", String(book.id));
     event.dataTransfer.effectAllowed = "move";
 
-    setIsDragging(true);
-  };
-
-  const handleDragEnd = () => {
-    setIsDragging(false);
+    // Changing the page in the same tick can cancel the drag in some webviews.
+    setTimeout(() => onDragStart?.({ itemId, span }), 0);
   };
 
   const handleContextMenu = (event: MouseEvent<HTMLDivElement>) => {
@@ -58,6 +72,11 @@ function Book({ book, isNew = false, onOpenMenu }: BookProps) {
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) {
+      event.preventDefault();
+      onOpen?.(book, event.currentTarget);
+      return;
+    }
     if (event.key !== "ContextMenu" && !(event.shiftKey && event.key === "F10")) return;
     event.preventDefault();
     const rect = event.currentTarget.getBoundingClientRect();
@@ -70,11 +89,14 @@ function Book({ book, isNew = false, onOpenMenu }: BookProps) {
       style={bookStyles}
       draggable
       tabIndex={0}
+      role="button"
+      data-book-id={book.id}
       aria-label={label}
       aria-haspopup="menu"
       title={book.author ? `${book.title} \u2014 ${book.author}` : book.title}
       onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
+      onDragEnd={() => onDragEnd?.()}
+      onClick={(event) => onOpen?.(book, event.currentTarget)}
       onContextMenu={handleContextMenu}
       onKeyDown={handleKeyDown}
     >

@@ -1,5 +1,7 @@
 node_modules/
 dist/
+# Copied from pdfjs-dist by vite.config.ts
+public/pdfjs/
 src-tauri/target/
 release/
 
@@ -12,3 +14,5 @@ release/
 
 .idea/
 .vscode/
+
+graft/

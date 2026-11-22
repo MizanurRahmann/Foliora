@@ -16,5 +16,20 @@
         grid-row: 1;
         z-index: 1;
         align-self: end;
+
+        // While it is dragged, the empty slots under it must receive the drop.
+        &--dragged {
+            pointer-events: none;
+        }
+
+        &--swap-ok {
+            outline: 3px solid rgba(46, 125, 50, 0.85);
+            outline-offset: -3px;
+        }
+
+        &--swap-bad {
+            outline: 3px solid rgba(179, 38, 30, 0.85);
+            outline-offset: -3px;
+        }
     }
 }

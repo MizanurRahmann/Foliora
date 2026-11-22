@@ -36,6 +36,8 @@ pub enum AppError {
     NoSpace,
     #[error("The book would not fit where it stands. Free up the space next to it or move it first")]
     NoSpaceAtPosition,
+    #[error("These books cannot exchange places: one of them would not fit where the other stands")]
+    SwapNotPossible,
     #[error("The book's PDF file could not be found")]
     FileMissing,
     #[error("This file is different from the one that was originally added")]
@@ -72,6 +74,7 @@ impl AppError {
             AppError::InvalidPdf(_) => "INVALID_PDF",
             AppError::NoSpace => "NO_SPACE",
             AppError::NoSpaceAtPosition => "NO_SPACE_AT_POSITION",
+            AppError::SwapNotPossible => "SWAP_NOT_POSSIBLE",
             AppError::FileMissing => "FILE_MISSING",
             AppError::FileChanged => "FILE_CHANGED",
             AppError::Constraint(_) => "CONSTRAINT",
